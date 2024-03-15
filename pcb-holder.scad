@@ -1,6 +1,8 @@
 include <BOSL2/std.scad>
 include <BOSL2/screws.scad>
 
+$fn = 100;
+
 module top_part_projection() {
   translate([-32, -45])
     import("box-walls.svg", convexity = 3, center = true);
@@ -17,13 +19,13 @@ module inner_inlay() {
     union() {
       top_part_projection();
       translate([-hole_x, -hole_y])
-        circle(d = hole_cover, $fn = 100);
+        circle(d = hole_cover);
       translate([hole_x, -hole_y])
-        circle(d = hole_cover, $fn = 100);
+        circle(d = hole_cover);
       translate([-hole_x, hole_y])
-        circle(d = hole_cover, $fn = 100);
+        circle(d = hole_cover);
       translate([hole_x, hole_y])
-        circle(d = hole_cover, $fn = 100);
+        circle(d = hole_cover);
     };
   }
 }
@@ -51,10 +53,54 @@ module cable_hole() {
   distance = 3.5;
   hull() {
     back(distance / 2)
-    circle(d = diameter, $fn = 100);
+    circle(d = diameter);
     fwd(distance / 2)
-    circle(d = diameter, $fn = 100);
+    circle(d = diameter);
   }
+}
+
+module pcb() {
+  pcb_width = 47.7;
+  pcb_length = 32.4;
+  pcb_height = 1.7;
+
+  usbc_width = 9.1;
+  usbc_length = 7.5;
+  usbc_height = 3.34;
+
+  usbc_length_offset = 4.3;
+  usbc_extends = 1;
+
+  hole_offset = 1.7;
+  hole_diameter = 1.5;
+
+  difference() {
+    color("red")
+      cube(size = [pcb_length, pcb_width, pcb_height]);
+
+    translate([hole_offset, hole_offset, -0.1])
+      cylinder(h = pcb_height + 0.2, d = hole_diameter);
+
+    translate([pcb_length - hole_offset, hole_offset, -0.1])
+      cylinder(h = pcb_height + 0.2, d = hole_diameter);
+
+    translate([pcb_length - hole_offset, pcb_width - hole_offset, -0.1])
+      cylinder(h = pcb_height + 0.2, d = hole_diameter);
+
+    translate([hole_offset, pcb_width - hole_offset, -0.1])
+      cylinder(h = pcb_height + 0.2, d = hole_diameter);
+  }
+
+  color("blue")
+    up(usbc_height / 2 + pcb_height + 0.1)
+    right(pcb_length - usbc_height / 2 - usbc_length_offset)
+    back(usbc_length - usbc_extends)
+    rotate([90, 0, 0])
+      hull() {
+        cylinder(h = usbc_length, d = usbc_height);
+        left(usbc_width - usbc_height)
+        cylinder(h = usbc_length, d = usbc_height);
+      }
 }
 
 difference() {
@@ -65,3 +111,6 @@ difference() {
   linear_extrude(height = 6.5)
     cable_hole();
 }
+
+up(10)
+pcb();
