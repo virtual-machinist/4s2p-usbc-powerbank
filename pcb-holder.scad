@@ -60,10 +60,6 @@ module cable_hole() {
 }
 
 module pcb() {
-  pcb_width = 47.7;
-  pcb_length = 32.4;
-  pcb_height = 1.7;
-
   usbc_width = 9.1;
   usbc_length = 7.5;
   usbc_height = 3.34;
@@ -103,6 +99,14 @@ module pcb() {
       }
 }
 
+module pcb_post(height, hole_diameter, post_diameter) {
+  difference() {
+    cylinder(h = height, d = post_diameter, center = true);
+    down(0.1)
+    cylinder(h = height + 0.3, d = hole_diameter, center = true);
+  }
+}
+
 difference() {
   inner_with_top_lid();
   back(5)
@@ -112,5 +116,37 @@ difference() {
     cable_hole();
 }
 
-up(10)
-pcb();
+pcb_width = 47.7;
+pcb_length = 32.4;
+pcb_height = 1.7;
+
+box_width = 90;
+box_length = 64;
+
+hole_offset = 1.7;
+hole_diameter = 1.5;
+
+module pcb_holder() {
+  post_height = 5;
+  post_diameter = 4;
+  power_post_offset = 4.5;
+
+  translate([hole_offset, hole_offset])
+    pcb_post(post_height, hole_diameter, post_diameter);
+
+  translate([pcb_length - hole_offset, hole_offset])
+    pcb_post(post_height, hole_diameter, post_diameter);
+
+  translate([pcb_length - power_post_offset - post_diameter / 2, pcb_width, 1.5])
+    cube([post_diameter, post_diameter, post_height + pcb_height * 2], center = true);
+}
+
+
+fwd(pcb_width / 2)
+left((box_length - pcb_length) / 2) {
+  up(8)
+  pcb_holder();
+
+  up(10.5)
+  pcb();
+}

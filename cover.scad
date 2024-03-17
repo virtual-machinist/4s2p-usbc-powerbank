@@ -31,9 +31,36 @@ module cover_fillet(scale) {
     import("cover_fillet.stl", convexity = 3, center = true);
 }
 
+module usbc_hole() {
+  usbc_outer_width = 13;
+  usbc_outer_length = 1.916;
+  usbc_outer_height = 7;
+
+  usbc_width = 9.1;
+  usbc_length = 7.5;
+  usbc_height = 3.5;
+
+  rotate([90, 0, 0])
+    hull() {
+      cylinder(h = usbc_length, d = usbc_height);
+      left(usbc_width - usbc_height)
+      cylinder(h = usbc_length, d = usbc_height);
+    }
+
+  rotate([90, 0, 0])
+    hull() {
+      cylinder(h = usbc_outer_length, d = usbc_outer_height);
+      left(usbc_outer_width - usbc_outer_height)
+      cylinder(h = usbc_outer_length, d = usbc_outer_height);
+    }
+}
+
 
 difference() {
   cover_hull();
   cover_fillet(0.92);
   holes();
+  translate([-4.573, 36.38, 10])
+    usbc_hole();
 };
+
