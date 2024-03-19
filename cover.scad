@@ -36,9 +36,9 @@ module usbc_hole() {
   usbc_outer_length = 1.916;
   usbc_outer_height = 7;
 
-  usbc_width = 9.1;
+  usbc_width = 9.4;
   usbc_length = 7.5;
-  usbc_height = 3.5;
+  usbc_height = 3.6;
 
   rotate([90, 0, 0])
     hull() {
@@ -55,12 +55,10 @@ module usbc_hole() {
     }
 }
 
-
 difference() {
   cover_hull();
-  cover_fillet(0.92);
+  cover_fillet(0.94);
   holes();
-  translate([-4.573, 36.38, 10])
+  translate([-4.8, 37, 8.5])
     usbc_hole();
 };
-

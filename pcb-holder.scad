@@ -59,7 +59,13 @@ module cable_hole() {
   }
 }
 
-module pcb() {
+pcb_width = 47.7;
+pcb_length = 32.4;
+pcb_thickness = 1.7;
+
+pcb_hole_offset = 1.7;
+
+module pcb(with_usb, thickness) {
   usbc_width = 9.1;
   usbc_length = 7.5;
   usbc_height = 3.34;
@@ -67,36 +73,37 @@ module pcb() {
   usbc_length_offset = 4.3;
   usbc_extends = 1;
 
-  hole_offset = 1.7;
-  hole_diameter = 1.5;
+  pcb_hole_diameter = 2;
 
   difference() {
     color("red")
-      cube(size = [pcb_length, pcb_width, pcb_height]);
+      cube(size = [pcb_length, pcb_width, thickness]);
 
-    translate([hole_offset, hole_offset, -0.1])
-      cylinder(h = pcb_height + 0.2, d = hole_diameter);
+    translate([pcb_hole_offset, pcb_hole_offset, -0.1])
+      cylinder(h = thickness + 0.2, d = pcb_hole_diameter);
 
-    translate([pcb_length - hole_offset, hole_offset, -0.1])
-      cylinder(h = pcb_height + 0.2, d = hole_diameter);
+    translate([pcb_length - pcb_hole_offset, pcb_hole_offset, -0.1])
+      cylinder(h = thickness + 0.2, d = pcb_hole_diameter);
 
-    translate([pcb_length - hole_offset, pcb_width - hole_offset, -0.1])
-      cylinder(h = pcb_height + 0.2, d = hole_diameter);
+    translate([pcb_length - pcb_hole_offset, pcb_width - pcb_hole_offset, -0.1])
+      cylinder(h = thickness + 0.2, d = pcb_hole_diameter);
 
-    translate([hole_offset, pcb_width - hole_offset, -0.1])
-      cylinder(h = pcb_height + 0.2, d = hole_diameter);
+    translate([pcb_hole_offset, pcb_width - pcb_hole_offset, -0.1])
+      cylinder(h = thickness + 0.2, d = pcb_hole_diameter);
   }
 
-  color("blue")
-    up(usbc_height / 2 + pcb_height + 0.1)
-    right(pcb_length - usbc_height / 2 - usbc_length_offset)
-    back(usbc_length - usbc_extends)
-    rotate([90, 0, 0])
-      hull() {
-        cylinder(h = usbc_length, d = usbc_height);
-        left(usbc_width - usbc_height)
-        cylinder(h = usbc_length, d = usbc_height);
-      }
+  if (with_usb) {
+    color("blue")
+      up(usbc_height / 2 + thickness + 0.1)
+      right(pcb_length - usbc_height / 2 - usbc_length_offset)
+      back(usbc_length - usbc_extends)
+      rotate([90, 0, 0])
+        hull() {
+          cylinder(h = usbc_length, d = usbc_height);
+          left(usbc_width - usbc_height)
+          cylinder(h = usbc_length, d = usbc_height);
+        }
+  }
 }
 
 module pcb_post(height, hole_diameter, post_diameter) {
@@ -116,37 +123,43 @@ difference() {
     cable_hole();
 }
 
-pcb_width = 47.7;
-pcb_length = 32.4;
-pcb_height = 1.7;
-
 box_width = 90;
 box_length = 64;
 
-hole_offset = 1.7;
-hole_diameter = 1.5;
-
 module pcb_holder() {
+  post_hole_diameter = 1.5;
   post_height = 5;
   post_diameter = 4;
-  power_post_offset = 4.5;
 
-  translate([hole_offset, hole_offset])
-    pcb_post(post_height, hole_diameter, post_diameter);
+  power_post_z_offset = 1.5;
+  power_post_offset_1_x = 4.5;
+  power_post_offset_2_x = -0.5;
+  power_post_offset_2_y = 9;
 
-  translate([pcb_length - hole_offset, hole_offset])
-    pcb_post(post_height, hole_diameter, post_diameter);
+  translate([pcb_hole_offset, pcb_hole_offset])
+    pcb_post(post_height, post_hole_diameter, post_diameter);
 
-  translate([pcb_length - power_post_offset - post_diameter / 2, pcb_width, 1.5])
-    cube([post_diameter, post_diameter, post_height + pcb_height * 2], center = true);
+  translate([pcb_length - pcb_hole_offset, pcb_hole_offset])
+    pcb_post(post_height, post_hole_diameter, post_diameter);
+
+  difference() {
+    union() {
+      translate([pcb_length - power_post_offset_1_x - post_diameter / 2, pcb_width, power_post_z_offset])
+        cube([post_diameter, post_diameter, post_height + pcb_thickness * 2], center = true);
+
+      translate([power_post_offset_2_x, pcb_width - power_post_offset_2_y - post_diameter / 2, power_post_z_offset])
+        cube([post_diameter, post_diameter, post_height + pcb_thickness * 2], center = true);
+    };
+    translate([-0.2, 0.2, 2.3])
+      pcb(false, pcb_thickness + 0.3);
+  }
 }
 
-
-fwd(pcb_width / 2)
+fwd(pcb_width / 2 + 9.75)
 left((box_length - pcb_length) / 2) {
   up(8)
   pcb_holder();
 
-  up(10.5)
-  pcb();
+  %up(10.5)
+  %pcb(true, pcb_thickness);
 }
