@@ -5,6 +5,7 @@ $fn = 100;
 
 height = 10;
 wire_diameter = 2.5;
+cell_hole_offset = 21.5;
 
 module cover_hull() {
   rotate([90, 0, 0])
@@ -13,7 +14,6 @@ module cover_hull() {
 
 module holes() {
   hole_height = height + 1;
-  cell_hole_offset = 21.5;
 
   cylinder(h = hole_height, d = wire_diameter);
   left(cell_hole_offset)
@@ -24,6 +24,11 @@ module holes() {
 
 difference() {
   cover_hull();
-  down(height / 2 + 0.5)
-  holes();
+  union() {
+    down(height / 2 + 0.5)
+    holes();
+    up(4.25)
+    cube([cell_hole_offset * 2 + wire_diameter, wire_diameter, wire_diameter], center = true);
+  }
 }
+
