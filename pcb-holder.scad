@@ -30,12 +30,14 @@ module inner_inlay() {
   }
 }
 
-module inner_with_top_lid() {
+module inner_with_top_lid(tight_fit) {
   inner_height = 3.5;
   lid_height = 2;
 
+  scale_factor = tight_fit ? 1 : 0.99;
+
   union() {
-    scale([0.99, 0.99])
+    scale([scale_factor, scale_factor])
       linear_extrude(height = inner_height)
         inner_inlay();
 
@@ -49,14 +51,9 @@ module inner_with_top_lid() {
 }
 
 module cable_hole() {
-  diameter = 3;
-  distance = 3.5;
-  hull() {
-    back(distance / 2)
-    circle(d = diameter);
-    fwd(distance / 2)
-    circle(d = diameter);
-  }
+  width = 5.5;
+  length = 10.5;
+  square([width, length], center = true);
 }
 
 pcb_width = 47.7;
@@ -114,10 +111,24 @@ module pcb_post(height, hole_diameter, post_diameter) {
   }
 }
 
+module pcb_clamp(height, hole_diameter, post_diameter, overlap) {
+  difference() {
+    cylinder(h = height, d = post_diameter, center = true);
+    union() {
+      down(0.1)
+      cylinder(h = height + 0.3, d = hole_diameter, center = true);
+      fwd(post_diameter / 2)
+      left(post_diameter / 2)
+      down(height / 2 + 0.1)
+      cube([overlap - 0.4, post_diameter, pcb_thickness + 0.1]);
+    }
+  }
+}
+
 difference() {
-  inner_with_top_lid();
+  inner_with_top_lid(true);
   back(5)
-  left(26)
+  left(25)
   down(0.5)
   linear_extrude(height = 6.5)
     cable_hole();
@@ -127,36 +138,51 @@ box_width = 90;
 box_length = 64;
 
 module pcb_holder() {
-  post_hole_diameter = 1.5;
   post_height = 5;
-  post_diameter = 4;
 
-  power_post_z_offset = 1.5;
-  power_post_offset_1_x = 4.5;
-  power_post_offset_2_x = -0.5;
-  power_post_offset_2_y = 9;
+  front_hole_diameter = 1.5;
+  front_diameter = 4;
+
+  back_hole_diameter = 3;
+  back_hole_bolt_margin = -0.2;
+  back_diameter = 6;
+
+  back_overlap = 1.7;
+  back_offset_x = 6.5;
+  back_offset_y = 11;
+
+  clamp_height = 4;
 
   translate([pcb_hole_offset, pcb_hole_offset])
-    pcb_post(post_height, post_hole_diameter, post_diameter);
+    pcb_post(post_height, front_hole_diameter, front_diameter);
 
   translate([pcb_length - pcb_hole_offset, pcb_hole_offset])
-    pcb_post(post_height, post_hole_diameter, post_diameter);
+    pcb_post(post_height, front_hole_diameter, front_diameter);
 
-  difference() {
-    union() {
-      translate([pcb_length - power_post_offset_1_x - post_diameter / 2, pcb_width, power_post_z_offset])
-        cube([post_diameter, post_diameter, post_height + pcb_thickness * 2], center = true);
+  translate([pcb_length - back_offset_x, pcb_width + back_overlap])
+    pcb_post(post_height, back_hole_diameter + back_hole_bolt_margin, back_diameter);
 
-      translate([power_post_offset_2_x, pcb_width - power_post_offset_2_y - post_diameter / 2, power_post_z_offset])
-        cube([post_diameter, post_diameter, post_height + pcb_thickness * 2], center = true);
-    };
-    translate([-0.2, 0.2, 2.3])
-      pcb(false, pcb_thickness + 0.3);
-  }
+  translate([-back_overlap, pcb_width - back_offset_y])
+    pcb_post(post_height, back_hole_diameter + back_hole_bolt_margin, back_diameter);
+
+  translate([pcb_length + back_overlap, pcb_width - back_offset_y])
+    pcb_post(post_height, back_hole_diameter + back_hole_bolt_margin, back_diameter);
+
+  translate([pcb_length - back_offset_x, pcb_width + back_overlap, 10])
+    zrot(90)
+    pcb_clamp(clamp_height, back_hole_diameter, back_diameter, back_overlap);
+
+  translate([-back_overlap, pcb_width - back_offset_y, 10])
+    zrot(180)
+    pcb_clamp(clamp_height, back_hole_diameter, back_diameter, back_overlap);
+
+  translate([pcb_length + back_overlap, pcb_width - back_offset_y, 10])
+    pcb_clamp(clamp_height, back_hole_diameter, back_diameter, back_overlap);
 }
 
 fwd(pcb_width / 2 + 9.75)
 left((box_length - pcb_length) / 2) {
+  color("purple")
   up(8)
   pcb_holder();
 
